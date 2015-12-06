@@ -3,9 +3,15 @@
 import os
 import sys
 import random
+import networkx as nx
+import copy
 
 
 file_name = 'data/Usair_weight.txt'
+
+G = nx.Graph()
+tG = nx.Graph()
+pG = nx.Graph()
 
 # contains all data
 universe = list()
@@ -53,6 +59,34 @@ def divide(sample_list):
             test_list.append(u)
 
 
+def draw(sample_list):
+    _universe_copy = copy.deepcopy(universe)
+    for i, u in enumerate(_universe_copy):
+        if i in sample_list:
+            u.append({'test': 1})
+
+    G.add_edges_from(_universe_copy)
+
+    elarge=[(u,v) for (u,v,d) in G.edges(data=True) if d['test']==1]
+    esmall=[(u,v) for (u,v,d) in G.edges(data=True) if d['test']!=1]
+
+    pos=nx.spring_layout(G) # positions for all nodes
+    nx.draw_networkx_nodes(G, pos, node_size=700)
+    # edges
+    nx.draw_networkx_edges(G, pos, edgelist=elarge, width=6)
+    nx.draw_networkx_edges(G, pos, edgelist=esmall, width=6, alpha=0.5, edge_color='b', style='dashed')
+
+    nx.draw_networkx_labels(G, pos, font_size=20, font_family='sans-serif')
+
+    plt.axis('off')
+    plt.show() # display
+
+
+
+def generate_graph():
+    tG.add_edges_from(train_list)
+    pG.add_edges_from(test_list)
+
 
 
 # main
@@ -60,3 +94,5 @@ path = find_file(file_name)
 read_file(path)
 sample_list = sampling(20)
 divide(sample_list)
+generate_graph()
+draw(sample_list)
