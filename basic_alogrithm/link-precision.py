@@ -6,6 +6,7 @@ import random
 import networkx as nx
 import copy
 import matplotlib.pyplot as plt
+import pylab as pl
 import pprint
 
 
@@ -182,6 +183,68 @@ def draw(sample_list):
 
 
 
+def draw_auc(x, y1, y2, y3):
+    plot1 = pl.plot(x, y1, 'r') # use pylab to plot x and y
+    plot2 = pl.plot(x, y2, 'b')
+    plot3 = pl.plot(x, y3, 'y')
+
+
+    pl.title('Plot of AUC vs. random rate') # give plot a title
+    pl.xlabel('random rate') # make axis labels
+    pl.ylabel('AUC')
+    pl.legend([plot1, plot2, plot3], ('CN', 'RA', 'PA'), 'best', numpoints=1) # make legend
+
+    pl.xlim(0, 20)# set axis limits
+    pl.ylim(0, 30)
+
+
+    pl.show()# show the plot on the screen
+
+
+
+
+
+
+
+
+
+
+
+
+def show_auc_graph():
+    index_list = list()
+    auc_by_ja_list = list()
+    auc_by_ra_list = list()
+    auc_by_pa_list = list()
+    i = 5
+    while i <= 20:
+        sample_list = sampling(20)
+        divide(sample_list)
+        generate_graph()
+
+        ja = jaccard_coefficient()
+        auc_by_ja = compute_auc(ja[0], ja[1]) # ja[1] is ja score without test set
+        ra = resource_allocation()
+        auc_by_ra = compute_auc(ra[0], ra[1]) # ra[1] is ra score without test set
+        pa = preferential_attachment()
+        auc_by_pa = compute_auc(pa[0], pa[1]) # pa[1] is pa score without test set
+
+        auc_by_ja_list.append(auc_by_ja)
+        auc_by_ra_list.append(auc_by_ra)
+        auc_by_pa_list.append(auc_by_pa)
+        index_list.append(i)
+
+        i += 1
+
+    draw_auc(index_list, auc_by_ja_list, auc_by_ra_list, auc_by_pa_list)
+
+
+
+def show_precision_graph():
+    pass
+
+
+
 
 
 
@@ -190,16 +253,8 @@ def draw(sample_list):
 path = find_file(file_name)
 read_file(path)
 
-
-sample_list = sampling(20)
-divide(sample_list)
-generate_graph()
-ja = jaccard_coefficient()
-auc_by_ja = compute_auc(ja[0], ja[1]) # ja[1] is ja score without test set
-ra = resource_allocation()
-auc_by_ra = compute_auc(ra[0], ra[1]) # ra[1] is ra score without test set
-pa = preferential_attachment()
-auc_by_pa = compute_auc(pa[0], pa[1]) # pa[1] is pa score without test set
-print(auc_by_ja, auc_by_ra, auc_by_pa)
-
+show_auc_graph()
+show_precision_graph(20)
+show_precision_graph(50)
+show_precision_graph(100)
 # draw(sample_list)
