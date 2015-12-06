@@ -2,12 +2,15 @@
 
 import os
 import sys
+import random
 
 
 file_name = 'data/Usair_weight.txt'
+
 # contains all data
 universe = list()
-
+train_list = list()
+test_list = list()
 
 
 def find_file(file_name):
@@ -34,8 +37,26 @@ def read_file(path):
     f.close()
 
 
+def sampling(rate):
+    l = len(universe)
+    n = int(l * rate * 0.01)
+    _list = random.sample(range(0, l), n)
+
+    return sorted(_list)
+
+
+def divide(sample_list):
+    for i, u in enumerate(universe):
+        if i not in sample_list:
+            train_list.append(u)
+        else:
+            test_list.append(u)
+
+
+
 
 # main
 path = find_file(file_name)
 read_file(path)
-print(universe)
+sample_list = sampling(20)
+divide(sample_list)
