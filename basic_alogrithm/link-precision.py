@@ -81,6 +81,19 @@ def generate_graph():
 
 
 
+def compute_auc(s, s_w):
+    pass
+
+
+def compute_precision(s, s_w):
+    pass
+
+
+
+
+
+
+
 
 
 
@@ -88,17 +101,17 @@ def generate_graph():
 def jaccard_coefficient():
     _G = copy.deepcopy(G)
     jc = nx.jaccard_coefficient(_G)
-    _G_without_preset = _G.remove_edges_from(test_list)
-    jc_without_preset = nx.jaccard_coefficient(_G_without_preset)
+    _G.remove_edges_from(test_list)
+    jc_without_preset = nx.jaccard_coefficient(_G)
     compute_auc(jc, jc_without_preset)
-    compute_precision(jc, jc_without_preset)
+    # compute_precision(jc, jc_without_preset)
 
 
 def resource_allocation():
     _G = copy.deepcopy(G)
     ra = nx.resource_allocation_index(_G)
-    _G_without_preset = _G.remove_edges_from(test_list)
-    ra_without_preset = nx.resource_allocation(_G_without_preset)
+    _G.remove_edges_from(test_list)
+    ra_without_preset = nx.resource_allocation(_G)
     compute_auc(ra, ra_without_preset)
     compute_precision(ra, ra_without_preset)
 
@@ -106,8 +119,8 @@ def resource_allocation():
 def preferential_attachment():
     _G = copy.deepcopy(G)
     pa = nx.preferential_attachment(_G)
-    _G_without_preset = _G.remove_edges_from(test_list)
-    pa_without_preset = nx.preferential_attachment(_G_without_preset)
+    _G.remove_edges_from(test_list)
+    pa_without_preset = nx.preferential_attachment(_G)
     compute_auc(pa, pa_without_preset)
     compute_precision(pa, pa_without_preset)
 
@@ -160,5 +173,6 @@ read_file(path)
 sample_list = sampling(20)
 divide(sample_list)
 generate_graph()
+jaccard_coefficient()
 # draw(sample_list)
 
