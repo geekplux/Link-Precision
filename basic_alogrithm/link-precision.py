@@ -5,6 +5,8 @@ import sys
 import random
 import networkx as nx
 import copy
+import matplotlib.pyplot as plt
+import pprint
 
 
 file_name = 'data/Usair_weight.txt'
@@ -17,6 +19,8 @@ pG = nx.Graph()
 universe = list()
 train_list = list()
 test_list = list()
+
+pp = pprint.PrettyPrinter(indent=4)
 
 
 def find_file(file_name):
@@ -67,18 +71,20 @@ def draw(sample_list):
 
     G.add_edges_from(_universe_copy)
 
-    elarge=[(u,v) for (u,v,d) in G.edges(data=True) if d['test']==1]
-    esmall=[(u,v) for (u,v,d) in G.edges(data=True) if d['test']!=1]
+
+    etrain=[(u,v) for (u,v,d) in G.edges(data=True) if 'test' not in d]
+    etest=[(u,v) for (u,v,d) in G.edges(data=True) if 'test' in d and d['test']==1]
 
     pos=nx.spring_layout(G) # positions for all nodes
-    nx.draw_networkx_nodes(G, pos, node_size=700)
+    nx.draw_networkx_nodes(G, pos, node_size=200)
     # edges
-    nx.draw_networkx_edges(G, pos, edgelist=elarge, width=6)
-    nx.draw_networkx_edges(G, pos, edgelist=esmall, width=6, alpha=0.5, edge_color='b', style='dashed')
+    nx.draw_networkx_edges(G, pos, edgelist=etrain, width=2)
+    nx.draw_networkx_edges(G, pos, edgelist=etest, width=2, alpha=0.5, edge_color='b', style='dashed')
 
-    nx.draw_networkx_labels(G, pos, font_size=20, font_family='sans-serif')
+    nx.draw_networkx_labels(G, pos, font_size=10, font_family='sans-serif')
 
     plt.axis('off')
+    plt.savefig("graph.png") # save as png
     plt.show() # display
 
 
