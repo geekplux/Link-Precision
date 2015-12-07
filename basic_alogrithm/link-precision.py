@@ -72,7 +72,7 @@ def divide(sample_list):
 
 
 def generate_graph():
-    G.add_edges_from(train)
+    G.add_edges_from(known)
     # tG.add_edges_from(train)
     # pG.add_edges_from(test)
 
@@ -92,7 +92,7 @@ def get_universe(nodes):
 
     for n in i_node_list:
         for m in i_node_list_copy:
-            if n != m:
+            if n != m and ([n, m] not in universe or [m, n] not in universe):
                 universe.append([n, m])
 
 
@@ -102,7 +102,8 @@ def get_unknown():
     i_u = iter(universe)
 
     for u in i_u:
-        if u not in train and u not in test:
+        if ([u[0], u[1]] not in train or [u[1], u[0]] not in train) and \
+           ([u[0], u[1]] not in test or [u[1], u[0]] not in test):
             unknown.append(u)
 
 
@@ -126,16 +127,12 @@ def compute_auc(s):
 
     for u, v, p in _ja:
         for t in i_test:
-            if (int(u) == int(t[0]) and int(v) == int(t[1])) or \
-               (int(u) == int(t[1]) and int(v) == int(t[0])):
+            if [u, v] in t or [v, u] in t:
                 test_score_list.append([u, v, p])
         for k in i_unknow:
-            if (int(u) == int(k[0]) and int(v) == int(k[1])) or \
-               (int(u) == int(k[1]) and int(v) == int(k[0])):
+            if [u, v] in k or [v, u] in k:
                 unknown_score_list.append([u, v, p])
 
-    # print(test_score_list)
-    # print(unknown_score_list)
 
     _auc_score = 0.0
 
@@ -171,7 +168,7 @@ def compute_precision(s, s_w):
 
 def jaccard_coefficient():
     _G = copy.deepcopy(G)
-    # _G.remove_edges_from(test)
+    _G.remove_edges_from(test)
     jc = nx.jaccard_coefficient(_G)
 
     return (jc, _G.nodes_iter(), _G.edges_iter())
@@ -179,7 +176,7 @@ def jaccard_coefficient():
 
 def resource_allocation():
     _G = copy.deepcopy(G)
-    # _G.remove_edges_from(test)
+    _G.remove_edges_from(test)
     ra = nx.resource_allocation_index(_G)
 
     return (ra, _G.nodes_iter(), _G.edges_iter())
@@ -187,7 +184,7 @@ def resource_allocation():
 
 def preferential_attachment():
     _G = copy.deepcopy(G)
-    # _G.remove_edges_from(test)
+    _G.remove_edges_from(test)
     pa = nx.preferential_attachment(_G)
 
     return (pa, _G.nodes_iter(), _G.edges_iter())
@@ -268,6 +265,8 @@ def show_auc_graph():
     i = 5
     while i <= 10:
         sample_list = sampling(i)
+        train.clear()
+        test.clear()
         divide(sample_list)
         generate_graph()
 
