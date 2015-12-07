@@ -13,13 +13,15 @@ import pprint
 file_name = 'data/Usair_weight.txt'
 
 G = nx.Graph()
-tG = nx.Graph()
-pG = nx.Graph()
+# tG = nx.Graph()
+# pG = nx.Graph()
 
 # contains all data
 universe = list()
-train_list = list()
-test_list = list()
+known = list()
+unknown = list()
+train = list()
+test = list()
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -48,13 +50,13 @@ def read_file(path):
     for each_line in f:
         arr = each_line.split()
         _link = [arr[0], arr[1]]
-        universe.append(_link)
+        known.append(_link)
 
     f.close()
 
 
 def sampling(rate):
-    l = len(universe)
+    l = len(known)
     n = int(l * rate * 0.01)
     _list = random.sample(range(0, l), n)
 
@@ -62,36 +64,85 @@ def sampling(rate):
 
 
 def divide(sample_list):
-    for i, u in enumerate(universe):
+    for i, u in enumerate(known):
         if i not in sample_list:
-            train_list.append(u)
+            train.append(u)
         else:
-            test_list.append(u)
+            test.append(u)
 
 
 def generate_graph():
-    G.add_edges_from(universe)
-    # tG.add_edges_from(train_list)
-    # pG.add_edges_from(test_list)
+    G.add_edges_from(train)
+    # tG.add_edges_from(train)
+    # pG.add_edges_from(test)
 
 
 
 
+def get_universe(nodes):
+    _node_list = list()
+    _node_list_copy = list()
+
+    for n in nodes:
+        _node_list.append(n)
+        _node_list_copy.append(n)
+
+    i_node_list = iter(_node_list)
+    i_node_list_copy = iter(_node_list_copy)
+
+    for n in i_node_list:
+        for m in i_node_list_copy:
+            if n != m:
+                universe.append([n, m])
 
 
 
 
+def get_unknown():
+    i_u = iter(universe)
 
-def compute_auc(s, s_w):
-    test_score = list()
+    for u in i_u:
+        if u not in train and u not in test:
+            unknown.append(u)
+
+
+
+
+def compute_auc(s):
+    _ja = s[0]
+    _g_nodes = s[1]
+    _g_edges = s[2]
+
+
+    get_universe(_g_nodes)
+    get_unknown()
+
+    test_score_list = list()
+    unknown_score_list = list()
+
+
+    i_test = iter(test)
+    i_unknow = iter(unknown)
+
+    for u, v, p in _ja:
+        for t in i_test:
+            if (int(u) == int(t[0]) and int(v) == int(t[1])) or \
+               (int(u) == int(t[1]) and int(v) == int(t[0])):
+                test_score_list.append([u, v, p])
+        for k in i_unknow:
+            if (int(u) == int(k[0]) and int(v) == int(k[1])) or \
+               (int(u) == int(k[1]) and int(v) == int(k[0])):
+                unknown_score_list.append([u, v, p])
+
+    # print(test_score_list)
+    # print(unknown_score_list)
+
     _auc_score = 0.0
-    for u, v, p in s:
-        for _u, _v in test_list:
-            if u == _u and v == _v:
-                test_score.append([u, v, p])
 
-    for u, v, p in s_w:
-        for _u, _v, _p in test_score:
+    i_test_score_list = iter(test_score_list)
+    i_unknown_score_list = iter(unknown_score_list)
+    for u, v, p in i_unknown_score_list:
+        for _u, _v, _p in i_test_score_list:
             if p > _p:
                 _auc_score += 0.0
             elif p < _p:
@@ -100,7 +151,7 @@ def compute_auc(s, s_w):
                 _auc_score += 0.5
 
 
-    _auc = _auc_score / (len(train_list) * len(test_list))
+    _auc = _auc_score / (len(unknown) * len(test))
 
     return _auc
 
@@ -120,29 +171,26 @@ def compute_precision(s, s_w):
 
 def jaccard_coefficient():
     _G = copy.deepcopy(G)
+    # _G.remove_edges_from(test)
     jc = nx.jaccard_coefficient(_G)
-    _G.remove_edges_from(test_list)
-    jc_without_test_set = nx.jaccard_coefficient(_G)
 
-    return (jc, jc_without_test_set)
+    return (jc, _G.nodes_iter(), _G.edges_iter())
 
 
 def resource_allocation():
     _G = copy.deepcopy(G)
+    # _G.remove_edges_from(test)
     ra = nx.resource_allocation_index(_G)
-    _G.remove_edges_from(test_list)
-    ra_without_test_set = nx.resource_allocation_index(_G)
 
-    return (ra, ra_without_test_set)
+    return (ra, _G.nodes_iter(), _G.edges_iter())
 
 
 def preferential_attachment():
     _G = copy.deepcopy(G)
+    # _G.remove_edges_from(test)
     pa = nx.preferential_attachment(_G)
-    _G.remove_edges_from(test_list)
-    pa_without_test_set = nx.preferential_attachment(_G)
 
-    return (pa, pa_without_test_set)
+    return (pa, _G.nodes_iter(), _G.edges_iter())
 
 
 
@@ -157,12 +205,13 @@ def preferential_attachment():
 
 
 def draw(sample_list):
-    _universe_copy = copy.deepcopy(universe)
-    for i, u in enumerate(_universe_copy):
+    _known_copy = copy.deepcopy(known)
+    for i, u in enumerate(_known_copy):
         if i in sample_list:
             u.append({'test': 1})
 
-    _G.add_edges_from(_universe_copy)
+    _G = nx.Graph()
+    _G.add_edges_from(_known_copy)
 
 
     etrain=[(u,v) for (u,v,d) in _G.edges(data=True) if 'test' not in d]
@@ -184,18 +233,18 @@ def draw(sample_list):
 
 
 def draw_auc(x, y1, y2, y3):
-    plot1 = pl.plot(x, y1, 'r') # use pylab to plot x and y
-    plot2 = pl.plot(x, y2, 'b')
-    plot3 = pl.plot(x, y3, 'y')
+    plot1 = pl.plot(x, y1, 'r', label='CN') # use pylab to plot x and y
+    plot2 = pl.plot(x, y2, 'b', label='RA')
+    plot3 = pl.plot(x, y3, 'y', label='PA')
 
 
     pl.title('Plot of AUC vs. random rate') # give plot a title
     pl.xlabel('random rate') # make axis labels
     pl.ylabel('AUC')
-    pl.legend([plot1, plot2, plot3], ('CN', 'RA', 'PA'), 'best', numpoints=1) # make legend
+    pl.legend()
 
-    pl.xlim(0, 20)# set axis limits
-    pl.ylim(0, 30)
+    pl.xlim(5, 20)# set axis limits
+    pl.ylim(0, 20)
 
 
     pl.show()# show the plot on the screen
@@ -217,30 +266,30 @@ def show_auc_graph():
     auc_by_ra_list = list()
     auc_by_pa_list = list()
     i = 5
-    while i <= 20:
-        sample_list = sampling(20)
+    while i <= 10:
+        sample_list = sampling(i)
         divide(sample_list)
         generate_graph()
 
         ja = jaccard_coefficient()
-        auc_by_ja = compute_auc(ja[0], ja[1]) # ja[1] is ja score without test set
+        auc_by_ja = compute_auc(ja)
         ra = resource_allocation()
-        auc_by_ra = compute_auc(ra[0], ra[1]) # ra[1] is ra score without test set
+        auc_by_ra = compute_auc(ra)
         pa = preferential_attachment()
-        auc_by_pa = compute_auc(pa[0], pa[1]) # pa[1] is pa score without test set
+        auc_by_pa = compute_auc(pa)
 
         auc_by_ja_list.append(auc_by_ja)
         auc_by_ra_list.append(auc_by_ra)
         auc_by_pa_list.append(auc_by_pa)
         index_list.append(i)
 
-        i += 1
+        i += 5
 
     draw_auc(index_list, auc_by_ja_list, auc_by_ra_list, auc_by_pa_list)
 
 
 
-def show_precision_graph():
+def show_precision_graph(l):
     pass
 
 
@@ -254,7 +303,9 @@ path = find_file(file_name)
 read_file(path)
 
 show_auc_graph()
-show_precision_graph(20)
-show_precision_graph(50)
-show_precision_graph(100)
+# show_precision_graph(20)
+# show_precision_graph(50)
+# show_precision_graph(100)
+
+# sample_list = sampling(20)
 # draw(sample_list)
