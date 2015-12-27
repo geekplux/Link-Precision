@@ -9,21 +9,18 @@ import matplotlib.pyplot as plt
 import pylab as pl
 import pprint
 
+pp = pprint.PrettyPrinter(indent = 4)
 
 file_name = 'data/Usair_weight.txt'
 
 G = nx.Graph()
-# tG = nx.Graph()
-# pG = nx.Graph()
 
-# contains all data
-universe = list()
+universe = list() # contains all data
 known = list()
 unknown = list()
 train = list()
 test = list()
 
-pp = pprint.PrettyPrinter(indent=4)
 
 
 
@@ -58,9 +55,9 @@ def read_file(path):
 def sampling(rate):
     l = len(known)
     n = int(l * rate * 0.01)
-    _list = random.sample(range(0, l), n)
+    _sample_list = random.sample(range(0, l), n)
 
-    return sorted(_list)
+    return sorted(_sample_list)
 
 
 def divide(sample_list):
@@ -71,10 +68,8 @@ def divide(sample_list):
             test.append(u)
 
 
-def generate_graph():
-    G.add_edges_from(known)
-    # tG.add_edges_from(train)
-    # pG.add_edges_from(test)
+def generate_graph(g, edges):
+    return g.add_edges_from(edges)
 
 
 
@@ -166,25 +161,24 @@ def compute_precision(s, s_w):
 
 
 
-def jaccard_coefficient():
-    _G = copy.deepcopy(G)
-    _G.remove_edges_from(test)
+def jaccard_coefficient(g):
+    _G = copy.deepcopy(g)
     jc = nx.jaccard_coefficient(_G)
 
     return (jc, _G.nodes_iter(), _G.edges_iter())
 
 
-def resource_allocation():
-    _G = copy.deepcopy(G)
-    _G.remove_edges_from(test)
+def resource_allocation(g):
+    _G = copy.deepcopy(g)
+    # _G.remove_edges_from(test)
     ra = nx.resource_allocation_index(_G)
 
     return (ra, _G.nodes_iter(), _G.edges_iter())
 
 
-def preferential_attachment():
-    _G = copy.deepcopy(G)
-    _G.remove_edges_from(test)
+def preferential_attachment(g):
+    _G = copy.deepcopy(g)
+    # _G.remove_edges_from(test)
     pa = nx.preferential_attachment(_G)
 
     return (pa, _G.nodes_iter(), _G.edges_iter())
@@ -262,19 +256,29 @@ def show_auc_graph():
     auc_by_ja_list = list()
     auc_by_ra_list = list()
     auc_by_pa_list = list()
+
+    auc_by_ja_list.clear()
+    auc_by_ra_list.clear()
+    auc_by_pa_list.clear()
+
     i = 5
     while i <= 10:
+        # get random slice of known list
         sample_list = sampling(i)
+
+        # clear train, test, unknown
         train.clear()
         test.clear()
-        divide(sample_list)
-        generate_graph()
+        unknown.clear()
 
-        ja = jaccard_coefficient()
+        divide(sample_list)
+        generate_graph(G, train)
+
+        ja = jaccard_coefficient(G)
         auc_by_ja = compute_auc(ja)
-        ra = resource_allocation()
+        ra = resource_allocation(G)
         auc_by_ra = compute_auc(ra)
-        pa = preferential_attachment()
+        pa = preferential_attachment(G)
         auc_by_pa = compute_auc(pa)
 
         auc_by_ja_list.append(auc_by_ja)
