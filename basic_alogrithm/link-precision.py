@@ -72,6 +72,8 @@ def get_unknown_edges(_G):
 
 
 
+
+
 def compute_auc(_G, compute, _test, _unknown):
     auc = 0
     _preds = compute(_G, _unknown)
@@ -96,40 +98,13 @@ def compute_auc(_G, compute, _test, _unknown):
 
 
 
-def compute_precision(s, s_w):
+def compute_precision(_G, compute, _test, _unknown):
     pass
 
 
 
 
 
-
-
-
-def draw(sample_list, data_list):
-    _data_list_copy = copy.deepcopy(data_list)
-    for i, u in enumerate(_data_list_copy):
-        if i in sample_list:
-            u.append({'test': 1})
-
-    _G = nx.Graph()
-    _G.add_edges_from(_known_copy)
-
-
-    etrain = [(u,v) for (u,v,d) in _G.edges(data=True) if 'test' not in d]
-    etest = [(u,v) for (u,v,d) in _G.edges(data=True) if 'test' in d and d['test'] == 1]
-
-    pos = nx.spring_layout(_G) # positions for all nodes
-    nx.draw_networkx_nodes(_G, pos, node_size = 200)
-    # edges
-    nx.draw_networkx_edges(_G, pos, edgelist = etrain, width = 2)
-    nx.draw_networkx_edges(_G, pos, edgelist = etest, width = 2, alpha = 0.5, edge_color = 'b', style = 'dashed')
-
-    nx.draw_networkx_labels(_G, pos, font_size = 10, font_family = 'sans-serif')
-
-    plt.axis('off')
-    plt.savefig("graph.png") # save as png
-    plt.show() # display
 
 
 
@@ -159,19 +134,21 @@ def draw_auc(x, y1, y2, y3):
 
 
 
-
-
-
-def show_auc_graph():
+def show_graph(predict):
     index_list = list()
-    auc_by_jc_list = list()
-    auc_by_ra_list = list()
-    auc_by_pa_list = list()
+    pred_by_jc_list = list()
+    pred_by_ra_list = list()
+    pred_by_pa_list = list()
 
     G = nx.Graph()
     unknown = list()
     train = list()
     test = list()
+
+    if predict == 'auc':
+        compute = compute_auc
+    else:
+        compute = compute_precision
 
     i = 4
     while i <= 20:
@@ -187,23 +164,19 @@ def show_auc_graph():
         generate_graph(G, train)
         unknown = get_unknown_edges(G)
 
-        auc_by_jc = compute_auc(G, nx.jaccard_coefficient, test, unknown)
-        auc_by_ra = compute_auc(G, nx.resource_allocation_index, test, unknown)
-        auc_by_pa = compute_auc(G, nx.preferential_attachment, test, unknown)
+        pred_by_jc = compute(G, nx.jaccard_coefficient, test, unknown)
+        pred_by_ra = compute(G, nx.resource_allocation_index, test, unknown)
+        pred_by_pa = compute(G, nx.preferential_attachment, test, unknown)
 
-        auc_by_jc_list.append(auc_by_jc)
-        auc_by_ra_list.append(auc_by_ra)
-        auc_by_pa_list.append(auc_by_pa)
+        pred_by_jc_list.append(pred_by_jc)
+        pred_by_ra_list.append(pred_by_ra)
+        pred_by_pa_list.append(pred_by_pa)
         index_list.append(i)
 
         i += 2
 
-    draw_auc(index_list, auc_by_jc_list, auc_by_ra_list, auc_by_pa_list)
+    draw_auc(index_list, pred_by_jc_list, pred_by_ra_list, pred_by_pa_list)
 
-
-
-def show_precision_graph(l):
-    pass
 
 
 
@@ -215,21 +188,60 @@ def show_precision_graph(l):
 file_name = 'data/Usair_weight.txt'
 
 
-# universe = list() # contains all data
 known = list() # contains known data
 
 path = find_file(file_name)
 known = read_file(path)
-# universe = generate_universe(known)
 
-show_auc_graph()
-# show_precision_graph(20)
-# show_precision_graph(50)
-# show_precision_graph(100)
+print('AUC or Precision?')
+s = input()
+if s == 'auc':
+    show_graph('auc')
+else:
+    print('please input L value:  ')
+    l = input()
+    show_graph('precision')
 
 
-#
-# generate graph from origin known data
-#
+
+
+
+
+
+
+
+
+# #
+# # draw graph using known data
+# #
+# def draw(sample_list, data_list):
+#     _data_list_copy = copy.deepcopy(data_list)
+#     for i, u in enumerate(_data_list_copy):
+#         if i in sample_list:
+#             u.append({'test': 1})
+
+#     _G = nx.Graph()
+#     _G.add_edges_from(_known_copy)
+
+
+#     etrain = [(u,v) for (u,v,d) in _G.edges(data=True) if 'test' not in d]
+#     etest = [(u,v) for (u,v,d) in _G.edges(data=True) if 'test' in d and d['test'] == 1]
+
+#     pos = nx.spring_layout(_G) # positions for all nodes
+#     nx.draw_networkx_nodes(_G, pos, node_size = 200)
+#     # edges
+#     nx.draw_networkx_edges(_G, pos, edgelist = etrain, width = 2)
+#     nx.draw_networkx_edges(_G, pos, edgelist = etest, width = 2, alpha = 0.5, edge_color = 'b', style = 'dashed')
+
+#     nx.draw_networkx_labels(_G, pos, font_size = 10, font_family = 'sans-serif')
+
+#     plt.axis('off')
+#     plt.savefig("graph.png") # save as png
+#     plt.show() # display
+
+
+# #
+# # generate graph from origin known data
+# #
 # sample_list = sampling(20)
 # draw(sample_list)
