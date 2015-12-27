@@ -84,11 +84,8 @@ def compute_auc(_G, compute, _test, _unknown):
         else:
             unknown_preds.append(p)
 
-    i_test_preds = iter(test_preds)
-    i_unknown_preds = iter(unknown_preds)
-
-    for tp in i_test_preds:
-        for up in i_unknown_preds:
+    for tp in test_preds:
+        for up in unknown_preds:
             if tp > up:
                 auc += 1.0
             elif tp == up:
@@ -148,7 +145,7 @@ def draw_auc(x, y1, y2, y3):
     pl.ylabel('AUC')
     pl.legend()
 
-    pl.xlim(5, 15)# set axis limits
+    pl.xlim(4, 20)# set axis limits
     pl.ylim(0, 1)
 
 
@@ -171,21 +168,22 @@ def show_auc_graph():
     auc_by_ra_list = list()
     auc_by_pa_list = list()
 
+    G = nx.Graph()
     unknown = list()
     train = list()
     test = list()
 
-    i = 5
-    while i <= 15:
+    i = 4
+    while i <= 20:
         # get random slice of known list
         sample_list = sampling(i, known)
 
         unknown.clear()
         train.clear()
         test.clear()
+        G.clear()
 
         divide(sample_list, train, test)
-        G = nx.Graph()
         generate_graph(G, train)
         unknown = get_unknown_edges(G)
 
@@ -198,7 +196,7 @@ def show_auc_graph():
         auc_by_pa_list.append(auc_by_pa)
         index_list.append(i)
 
-        i += 1
+        i += 2
 
     draw_auc(index_list, auc_by_jc_list, auc_by_ra_list, auc_by_pa_list)
 
