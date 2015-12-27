@@ -127,15 +127,15 @@ def compute_precision(_G, compute, _test, _unknown):
 
 
 
-def draw_auc(x, y1, y2, y3):
+def draw_pred(predict, x, y1, y2, y3):
     plot1 = pl.plot(x, y1, 'r', label='CN') # use pylab to plot x and y
     plot2 = pl.plot(x, y2, 'b', label='RA')
     plot3 = pl.plot(x, y3, 'y', label='PA')
 
 
-    pl.title('Plot of AUC vs. random rate') # give plot a title
+    pl.title('Plot of ' + predict + ' vs. random rate') # give plot a title
     pl.xlabel('random rate') # make axis labels
-    pl.ylabel('AUC')
+    pl.ylabel(predict)
     pl.legend()
 
     pl.xlim(4, 20)# set axis limits
@@ -163,7 +163,7 @@ def show_graph(predict):
     train = list()
     test = list()
 
-    if predict == 'auc':
+    if predict == 'AUC':
         compute = compute_auc
     else:
         compute = compute_precision
@@ -193,7 +193,7 @@ def show_graph(predict):
 
         i += 2
 
-    draw_auc(index_list, pred_by_jc_list, pred_by_ra_list, pred_by_pa_list)
+    draw_pred(predict, index_list, pred_by_jc_list, pred_by_ra_list, pred_by_pa_list)
 
 
 
@@ -214,11 +214,11 @@ known = read_file(path)
 print('AUC or Precision?')
 s = input()
 if s == 'auc':
-    show_graph('auc')
+    show_graph('AUC')
 else:
     print('please input L value:  ')
     L = input()
-    show_graph('precision')
+    show_graph('Precision')
 
 
 
