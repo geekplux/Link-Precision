@@ -62,26 +62,39 @@ def generate_graph(_G, edges):
 
 
 def get_unknown_edges(_G):
+    _unknown = list()
     _edges = nx.non_edges(_G)
     for e in _edges:
-        unknown.append(e)
+        _unknown.append(e)
+
+    return _unknown
 
 
 
 
-def compute_auc(compute):
+def compute_auc(_G, compute, _test, _unknown):
     auc = 0
-    test_preds = compute(G, test)
-    unknown_preds = compute(G, unknown)
-    for u, v, test_pred in test_preds:
-        print(u, v, test_pred)
-        # for m, w, unknown_pred in unknown_preds:
-        #     if test_pred > unknown_pred:
-        #         auc += 1.0
-        #     elif test_pred == unknown_pred:
-        #         auc += 0.5
+    _preds = compute(_G, _unknown)
+    test_preds = list()
+    unknown_preds = list()
 
-    return auc
+    for u, v, p in _preds:
+        if [u, v] in _test or [v, u] in _test:
+            test_preds.append(p)
+        else:
+            unknown_preds.append(p)
+
+    i_test_preds = iter(test_preds)
+    i_unknown_preds = iter(unknown_preds)
+
+    for tp in i_test_preds:
+        for up in i_unknown_preds:
+            if tp > up:
+                auc += 1.0
+            elif tp == up:
+                auc += 0.5
+
+    return (auc / (len(test_preds) * len(unknown_preds)))
 
 
 
@@ -135,8 +148,8 @@ def draw_auc(x, y1, y2, y3):
     pl.ylabel('AUC')
     pl.legend()
 
-    pl.xlim(5, 20)# set axis limits
-    pl.ylim(0, 20)
+    pl.xlim(5, 15)# set axis limits
+    pl.ylim(0, 1)
 
 
     pl.show()# show the plot on the screen
@@ -158,29 +171,34 @@ def show_auc_graph():
     auc_by_ra_list = list()
     auc_by_pa_list = list()
 
+    unknown = list()
+    train = list()
+    test = list()
+
     i = 5
-    while i <= 5:
+    while i <= 15:
         # get random slice of known list
         sample_list = sampling(i, known)
 
-        # clear train, test, unknown
+        unknown.clear()
         train.clear()
         test.clear()
 
         divide(sample_list, train, test)
+        G = nx.Graph()
         generate_graph(G, train)
-        get_unknown_edges(G)
+        unknown = get_unknown_edges(G)
 
-        auc_by_jc = compute_auc(nx.jaccard_coefficient)
-        auc_by_ra = compute_auc(nx.resource_allocation_index)
-        auc_by_pa = compute_auc(nx.preferential_attachment)
+        auc_by_jc = compute_auc(G, nx.jaccard_coefficient, test, unknown)
+        auc_by_ra = compute_auc(G, nx.resource_allocation_index, test, unknown)
+        auc_by_pa = compute_auc(G, nx.preferential_attachment, test, unknown)
 
         auc_by_jc_list.append(auc_by_jc)
         auc_by_ra_list.append(auc_by_ra)
         auc_by_pa_list.append(auc_by_pa)
         index_list.append(i)
 
-        i += 5
+        i += 1
 
     draw_auc(index_list, auc_by_jc_list, auc_by_ra_list, auc_by_pa_list)
 
@@ -198,14 +216,9 @@ def show_precision_graph(l):
 # main
 file_name = 'data/Usair_weight.txt'
 
-G = nx.Graph()
 
-universe = list() # contains all data
+# universe = list() # contains all data
 known = list() # contains known data
-unknown = list()
-train = list()
-test = list()
-
 
 path = find_file(file_name)
 known = read_file(path)
