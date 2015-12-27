@@ -97,10 +97,28 @@ def compute_auc(_G, compute, _test, _unknown):
 
 
 
+def by_p(n):
+    return n[2]
 
 def compute_precision(_G, compute, _test, _unknown):
-    pass
+    non_preds = list() # contain test and unknown
+    m = 0
 
+    _preds = compute(_G, _unknown)
+
+    for u, v, p in _preds:
+        non_preds.append([u, v, p])
+
+
+    sorted_preds = sorted(non_preds, key=by_p, reverse=True)
+    l = int(L)
+    top_L_preds = sorted_preds[0:l]
+
+    for n in top_L_preds:
+        if [n[0], n[1]] in _test or [n[1], n[0]] in _test:
+            m += 1
+
+    return m / l
 
 
 
@@ -199,7 +217,7 @@ if s == 'auc':
     show_graph('auc')
 else:
     print('please input L value:  ')
-    l = input()
+    L = input()
     show_graph('precision')
 
 
