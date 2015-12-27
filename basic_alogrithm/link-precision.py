@@ -61,10 +61,30 @@ def generate_graph(_G, edges):
     return _G.add_edges_from(edges)
 
 
+def get_unknown_edges(_G):
+    _edges = nx.non_edges(_G)
+    for e in _edges:
+        unknown.append(e)
 
 
-def compute_auc(s):
-    pass
+
+
+def compute_auc(compute):
+    auc = 0
+    test_preds = compute(G, test)
+    unknown_preds = compute(G, unknown)
+    for u, v, test_pred in test_preds:
+        print(u, v, test_pred)
+        # for m, w, unknown_pred in unknown_preds:
+        #     if test_pred > unknown_pred:
+        #         auc += 1.0
+        #     elif test_pred == unknown_pred:
+        #         auc += 0.5
+
+    return auc
+
+
+
 
 def compute_precision(s, s_w):
     pass
@@ -139,7 +159,7 @@ def show_auc_graph():
     auc_by_pa_list = list()
 
     i = 5
-    while i <= 10:
+    while i <= 5:
         # get random slice of known list
         sample_list = sampling(i, known)
 
@@ -149,13 +169,11 @@ def show_auc_graph():
 
         divide(sample_list, train, test)
         generate_graph(G, train)
+        get_unknown_edges(G)
 
-        jc = nx.jaccard_coefficient(G)
-        auc_by_jc = compute_auc(jc)
-        ra = nx.resource_allocation_index(G)
-        auc_by_ra = compute_auc(ra)
-        pa = nx.preferential_attachment(G)
-        auc_by_pa = compute_auc(pa)
+        auc_by_jc = compute_auc(nx.jaccard_coefficient)
+        auc_by_ra = compute_auc(nx.resource_allocation_index)
+        auc_by_pa = compute_auc(nx.preferential_attachment)
 
         auc_by_jc_list.append(auc_by_jc)
         auc_by_ra_list.append(auc_by_ra)
